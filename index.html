@@ -32,13 +32,14 @@
             -moz-osx-font-smoothing:grayscale;
         }
 
-        /* canvas background */
-        #bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
-            pointer-events: none;
+        /* subtle neon background bars */
+        .bg-bars{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+        .bar{ position:absolute; bottom:0; background:linear-gradient(180deg, rgba(0,255,150,0.08), rgba(0,255,150,0.02)); opacity:0.25; }
+        .bar-1{ width:50px; height:35%; left:10%; animation:sway 6s ease-in-out infinite; }
+        .bar-2{ width:45px; height:28%; right:18%; animation:sway 7s ease-in-out infinite 1s; }
+        .bar-3{ width:48px; height:40%; left:30%; animation:sway 8s ease-in-out infinite 2s; }
+        @keyframes sway{
+            0%,100%{ transform:scaleY(1); opacity:0.25; } 50%{ transform:scaleY(1.08); opacity:0.35; }
         }
 
         /* decorative background */
@@ -208,7 +209,11 @@
     </style>
 </head>
 <body>
-    <canvas id="bg"></canvas>
+    <div class="bg-bars">
+        <div class="bar bar-1"></div>
+        <div class="bar bar-2"></div>
+        <div class="bar bar-3"></div>
+    </div>
 
     <div class="bitcoin-bg" aria-hidden="true">
         <div class="bitcoin-logo" style="top:8%; left:8%;">₿</div>
@@ -454,46 +459,6 @@
     </footer>
 
     <script>
-        // Stock market background animation
-        const canvas = document.getElementById("bg");
-        const ctx = canvas.getContext("2d");
-
-        let w, h;
-        function resize() {
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
-        }
-        window.addEventListener("resize", resize);
-        resize();
-
-        // linie trendu
-        let lines = Array.from({length: 25}, () => ({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            dx: (Math.random() - 0.5) * 2,
-            dy: (Math.random() - 0.5) * 2,
-            value: Math.random() > 0.5
-        }));
-
-        // słupki
-        let bars = Array.from({length: 20}, (_, i) => ({
-            x: i * 80,
-            h: Math.random() * h,
-            speed: 1 + Math.random() * 2,
-            up: Math.random() > 0.5
-        }));
-
-        function drawBackground() {
-            ctx.fillStyle = "#0b0f14";
-            ctx.fillRect(0, 0, w, h);
-
-         
-
-            requestAnimationFrame(drawBackground);
-        }
-
-        drawBackground();
-
         // mobile menu toggle
         const mobileMenu = document.getElementById('mobileMenu');
         const navLinks = document.getElementById('navLinks');
