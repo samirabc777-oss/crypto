@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CryptoStats - Calculate Your Profits</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root{
+            --bg-primary:#0a0a0a;
+            --bg-secondary:#111111;
+            --bg-card:#141414;
+            --card-inner:#0f0f0f;
+            --text-primary:#ffffff;
+            --text-secondary:#a0a0a0;
+            --accent-primary:#ffd700;
+            --accent-secondary:#ffed4e;
+            --accent-gradient: linear-gradient(135deg,#ffd700 0%,#ffed4e 100%);
+            --border-color:#2a2a2a;
+            --glow-primary: rgba(255,215,0,0.25);
+            --positive:#27c26a;
+            --negative:#ff5c6c;
+        }
+        body{
+            font-family:'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:var(--bg-primary);
+            color:var(--text-primary);
+            line-height:1.6;
+            overflow-x:hidden;
+            position:relative;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+
+        /* decorative background */
+        .bitcoin-bg{ position:fixed; inset:0; pointer-events:none; z-index:0; }
+        .bitcoin-logo{ position:absolute; font-size:4rem; opacity:0.04; color:var(--accent-primary);
+            animation: float 10s ease-in-out infinite; }
+        @keyframes float{
+            0%,100%{ transform:translateY(0) rotate(0); } 25%{ transform:translateY(-30px) rotate(10deg); }
+            50%{ transform:translateY(-50px) rotate(0deg); } 75%{ transform:translateY(-30px) rotate(-10deg); }
+        }
+
+        /* Navigation */
+        nav{ position:fixed; top:0; left:0; right:0; background:rgba(10,10,10,0.94);
+            backdrop-filter: blur(12px); border-bottom:1px solid rgba(255,255,255,0.02); z-index:1000; padding:0.9rem 1.5rem; }
+        .nav-container{ max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+        .logo{ display:flex; align-items:center; gap:0.8rem; font-weight:700; }
+        .logo-mark{
+            width:54px; height:38px; border-radius:8px;
+            background:var(--accent-primary); color:#000; display:flex; align-items:center; justify-content:center;
+            font-weight:900; font-size:1.05rem; box-shadow:0 6px 18px rgba(0,0,0,0.45); border:1px solid rgba(0,0,0,0.12);
+            flex-shrink:0;
+        }
+        .site-title{ color:var(--text-primary); font-size:1.05rem; letter-spacing:0.2px; }
+
+        .nav-links{ display:flex; gap:1.2rem; list-style:none; }
+        .nav-links a{ color:var(--text-secondary); text-decoration:none; font-size:0.95rem; transition:color 0.2s; }
+        .nav-links a:hover{ color:var(--accent-primary); }
+
+        .mobile-menu{ display:none; flex-direction:column; gap:4px; cursor:pointer; }
+        .mobile-menu span{ width:25px; height:2px; background:var(--text-primary); }
+
+        /* Hero */
+        .hero{ min-height:64vh; display:flex; align-items:center; justify-content:center; text-align:center;
+            padding:5.5rem 1.25rem 2.5rem; position:relative; z-index:1; }
+        .hero-content{ max-width:940px; position:relative; z-index:2; }
+        .hero h1{ font-size:clamp(2.2rem,7vw,3.6rem); font-weight:800; margin-bottom:0.6rem;
+            background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero p{ color:var(--text-secondary); margin-bottom:1rem; font-size:1rem; }
+
+        /* search (in hero) */
+        .search-container{ margin:1.1rem auto 0; max-width:820px; position:relative; z-index:3; display:flex; gap:0.6rem; align-items:center; }
+        .search-box{
+            flex:1; padding:0.9rem 1rem; background:linear-gradient(180deg,var(--bg-secondary), rgba(255,255,255,0.01));
+            border:1px solid rgba(255,255,255,0.03); border-radius:12px; color:var(--text-primary); font-size:1rem;
+            transition: box-shadow .25s ease, border-color .2s ease;
+            backdrop-filter: blur(4px);
+        }
+        .search-box:focus{ outline:none; border-color:var(--accent-primary); box-shadow:0 4px 22px var(--glow-primary); }
+        .search-btn{
+            padding:0.9rem 1rem; background:var(--accent-gradient); border:none; color:#000; font-weight:700; border-radius:10px; cursor:pointer;
+            box-shadow:0 6px 18px rgba(255,215,0,0.08);
+            transition: transform .18s ease;
+        }
+        .search-btn:active{ transform: translateY(1px); }
+
+        .search-results{ position:absolute; top:calc(100% + 0.5rem); left:0; right:0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; display:none; max-height:260px; overflow:auto; z-index:20; }
+        .search-results.show{ display:block; }
+        .search-result-item{ padding:0.85rem 1rem; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.02); cursor:pointer; }
+        .search-result-item:hover{ color:var(--accent-primary); background:rgba(255,255,255,0.02); padding-left:1.05rem; }
+
+        /* Section */
+        .section{ padding:3.5rem 1.25rem 4rem; max-width:1200px; margin:0 auto; z-index:1; position:relative; }
+        .section-title{ font-size:1.8rem; font-weight:700; text-align:center; margin-bottom:0.4rem; background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .section-subtitle{ color:var(--text-secondary); text-align:center; margin-bottom:1rem; }
+
+        /* calculators grid + modern card design */
+        .calculators-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1rem; margin-top:1rem; }
+        .calculator-card{
+            position:relative;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border-radius:14px;
+            padding:1.25rem;
+            border:1px solid rgba(255,255,255,0.03);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            overflow:visible;
+            transition: transform .32s cubic-bezier(.2,.9,.2,1), box-shadow .32s ease, border-color .28s ease;
+            isolation:isolate;
+        }
+
+        /* animated gold glow / border on hover */
+        .calculator-card::after{
+            content:'';
+            position:absolute;
+            inset:-2px;
+            border-radius:16px;
+            background: linear-gradient(90deg, rgba(255,215,0,0.12), rgba(255,237,78,0.12) 40%, rgba(255,215,0,0.12));
+            filter: blur(12px);
+            opacity:0;
+            transform: scale(1);
+            transition: opacity .35s ease, transform .45s ease;
+            pointer-events:none;
+            z-index:0;
+        }
+        .calculator-card:hover{
+            transform: translateY(-8px);
+            border-color: rgba(255,215,0,0.45);
+            box-shadow: 0 18px 50px rgba(0,0,0,0.6), 0 8px 40px rgba(255,215,0,0.06);
+        }
+        .calculator-card:hover::after{
+            opacity:1;
+            animation: rotateGlow 6s linear infinite;
+            transform: scale(1.02);
+        }
+        @keyframes rotateGlow{
+            from{ transform: rotate(0deg) scale(1.02); }
+            to{ transform: rotate(360deg) scale(1.02); }
+        }
+
+        /* ensure card contents sit above glow */
+        .calculator-card > *{ position: relative; z-index:1; }
+
+        .calculator-header{ margin-bottom:0.9rem; }
+        .calculator-title{ font-size:1.12rem; font-weight:700; color:var(--text-primary); }
+
+        .input-group{ margin-bottom:0.9rem; }
+        .input-group label{ display:block; margin-bottom:0.45rem; color:var(--text-secondary); font-size:0.9rem; }
+        .input-group input, .input-group select{
+            width:100%; padding:0.85rem 0.95rem; border-radius:10px; border:1px solid rgba(255,255,255,0.03);
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+            color:var(--text-primary); transition: box-shadow .18s ease, border-color .18s ease;
+        }
+        .input-group input:focus, .input-group select:focus{
+            outline:none; border-color:var(--accent-primary); box-shadow:0 6px 18px rgba(255,215,0,0.06);
+        }
+
+        .calculate-btn{
+            width:100%; padding:0.95rem; border-radius:12px; border:none; font-weight:800; color:#000;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            cursor:pointer; transition: transform .12s ease, box-shadow .18s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+        }
+        .calculate-btn:hover{ transform: translateY(-2px); box-shadow: 0 18px 36px rgba(0,0,0,0.6), 0 8px 30px rgba(255,215,0,0.06); }
+        .calculate-btn:active{ transform: translateY(0); }
+
+        /* new calculator description style */
+        .calculator-desc{
+            margin-top:0.6rem;
+            color:var(--text-secondary);
+            font-size:0.95rem;
+            line-height:1.4;
+        }
+
+        .results{ margin-top:1rem; padding-top:1rem; border-top:1px dashed rgba(255,255,255,0.03); display:none; }
+        .results.show{ display:block; }
+        .result-item{ display:flex; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid rgba(255,255,255,0.02); }
+        .result-label{ color:var(--text-secondary); } .result-value{ font-weight:700; color:var(--text-primary); }
+
+        /* Top calculators */
+        .top-section{ margin-top:1.75rem; }
+        .top-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; margin-top:0.9rem; }
+        .top-card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border:1px solid rgba(255,255,255,0.03); padding:1rem; border-radius:10px; display:flex; flex-direction:column; gap:0.6rem; }
+        .top-card h4{ margin:0; color:var(--text-primary); }
+        .top-card p{ color:var(--text-secondary); font-size:0.95rem; }
+        .open-btn{ margin-top:auto; align-self:flex-start; padding:0.55rem 0.8rem; border-radius:8px; background:transparent; border:1px solid var(--accent-primary); color:var(--accent-primary); text-decoration:none; font-weight:700; }
+
+        /* about */
+        .about-text{ color:var(--text-secondary); line-height:1.6; }
+
+        /* footer */
+        footer{ background:var(--bg-secondary); border-top:1px solid rgba(255,255,255,0.02); padding:2rem 1.25rem; margin-top:2rem; }
+        .footer-content{ max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+        .footer-logo{ font-weight:700; background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        /* responsive */
+        @media (max-width:980px){ .nav-links{ display:none; } .mobile-menu{ display:flex; } .hero{ padding-top:6.5rem; } .nav-container{ padding:0 10px; } }
+        @media (max-width:600px){ .search-container{ flex-direction:column; gap:0.6rem; } .calculator-card{ padding:1rem; } .calculate-btn{ padding:0.8rem; } }
+    </style>
+</head>
+<body>
+    <div class="bitcoin-bg" aria-hidden="true">
+        <div class="bitcoin-logo" style="top:8%; left:8%;">₿</div>
+        <div class="bitcoin-logo" style="top:24%; right:12%;">₿</div>
+        <div class="bitcoin-logo" style="top:52%; left:4%;">₿</div>
+        <div class="bitcoin-logo" style="bottom:18%; right:12%;">₿</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo" aria-hidden="false">
+                <div class="logo-mark" aria-hidden="false">CS</div>
+                <div class="site-title">CryptoStats</div>
+            </div>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#calculators">Calculators</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+
+            <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" aria-label="hero">
+        <div class="hero-content">
+            <h1>CryptoStats</h1>
+            <p>Calculate your profits from stocks, Bitcoin, Ethereum, currencies and compound interest investments. Make informed financial decisions with our professional-grade tools.</p>
+
+            <!-- Search moved up into hero -->
+            <div class="search-container" role="search" aria-label="Search calculators">
+                <input id="searchBox" class="search-box" type="text" placeholder="Search calculators... (e.g., Stock, Bitcoin, Compound)"/>
+                <button class="search-btn" onclick="openSearchResults()">Search</button>
+                <div id="searchResults" class="search-results" role="listbox" aria-hidden="true"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculators Section -->
+    <section class="section" id="calculators">
+        <h2 class="section-title">Investment Calculators</h2>
+        <p class="section-subtitle">Choose a calculator and analyze your investment potential</p>
+
+        <div class="calculators-grid" id="calculatorsGrid">
+            <!-- Stock -->
+            <div class="calculator-card" data-name="Stock Profit Calculator" id="stockCard">
+                <div class="calculator-header"><h3 class="calculator-title">Stock Profit Calculator</h3></div>
+                <div class="input-group"><label>Investment Amount ($)</label><input type="number" id="stockInvestment" placeholder="10000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Buy Price per Share ($)</label><input type="number" id="stockBuyPrice" placeholder="100" min="0" step="0.01"></div>
+                <div class="input-group"><label>Sell Price per Share ($)</label><input type="number" id="stockSellPrice" placeholder="150" min="0" step="0.01"></div>
+                <button class="calculate-btn" onclick="calculateStock()">Calculate Profit</button>
+                <div class="calculator-desc">Calculate how many shares you can buy, your total profit or loss, return percentage and final portfolio value based on buy/sell prices.</div>
+                <div class="results" id="stockResults">
+                    <div class="result-item"><span class="result-label">Number of Shares</span><span class="result-value" id="stockShares">--</span></div>
+                    <div class="result-item"><span class="result-label">Profit / Loss</span><span class="result-value" id="stockProfit">$0</span></div>
+                    <div class="result-item"><span class="result-label">Return Percentage</span><span class="result-value" id="stockPercent">0%</span></div>
+                    <div class="result-item"><span class="result-label">Final Portfolio Value</span><span class="result-value" id="stockFinal">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Bitcoin -->
+            <div class="calculator-card" data-name="Bitcoin Profit Calculator" id="btcCard">
+                <div class="calculator-header"><h3 class="calculator-title">Bitcoin Profit Calculator</h3></div>
+                <div class="input-group"><label>Investment Amount ($)</label><input type="number" id="btcInvestment" placeholder="5000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Bitcoin Buy Price ($)</label><input type="number" id="btcBuyPrice" placeholder="40000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Bitcoin Sell Price ($)</label><input type="number" id="btcSellPrice" placeholder="60000" min="0" step="0.01"></div>
+                <button class="calculate-btn" onclick="calculateBitcoin()">Calculate Profit</button>
+                <div class="calculator-desc">Estimate how much BTC you'll acquire with your investment and the resulting profit, return percentage and final USD value.</div>
+                <div class="results" id="btcResults">
+                    <div class="result-item"><span class="result-label">Bitcoin Bought</span><span class="result-value" id="btcAmount">-- BTC</span></div>
+                    <div class="result-item"><span class="result-label">Profit / Loss</span><span class="result-value" id="btcProfit">$0</span></div>
+                    <div class="result-item"><span class="result-label">Return Percentage</span><span class="result-value" id="btcPercent">0%</span></div>
+                    <div class="result-item"><span class="result-label">Final Value</span><span class="result-value" id="btcFinal">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Ethereum -->
+            <div class="calculator-card" data-name="Ethereum Profit Calculator" id="ethCard">
+                <div class="calculator-header"><h3 class="calculator-title">Ethereum Profit Calculator</h3></div>
+                <div class="input-group"><label>Investment Amount ($)</label><input type="number" id="ethInvestment" placeholder="2000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Ethereum Buy Price ($)</label><input type="number" id="ethBuyPrice" placeholder="2000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Ethereum Sell Price ($)</label><input type="number" id="ethSellPrice" placeholder="3500" min="0" step="0.01"></div>
+                <button class="calculate-btn" onclick="calculateEthereum()">Calculate Profit</button>
+                <div class="calculator-desc">Similar to the Bitcoin calculator — compute ETH bought, profit or loss, and final USD value based on buy/sell prices.</div>
+                <div class="results" id="ethResults">
+                    <div class="result-item"><span class="result-label">Ethereum Bought</span><span class="result-value" id="ethAmount">-- ETH</span></div>
+                    <div class="result-item"><span class="result-label">Profit / Loss</span><span class="result-value" id="ethProfit">$0</span></div>
+                    <div class="result-item"><span class="result-label">Return Percentage</span><span class="result-value" id="ethPercent">0%</span></div>
+                    <div class="result-item"><span class="result-label">Final Value</span><span class="result-value" id="ethFinal">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Compound -->
+            <div class="calculator-card" data-name="Compound Interest Calculator" id="compoundCard">
+                <div class="calculator-header"><h3 class="calculator-title">Compound Interest Calculator</h3></div>
+                <div class="input-group"><label>Initial Investment ($)</label><input type="number" id="compoundInitial" placeholder="10000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Monthly Contribution ($)</label><input type="number" id="compoundMonthly" placeholder="500" min="0" step="0.01"></div>
+                <div class="input-group"><label>Monthly Return (%)</label><input type="number" id="compoundReturn" placeholder="2.5" min="0" step="0.01"></div>
+                <div class="input-group"><label>Investment Duration (Months)</label><input type="number" id="compoundDuration" placeholder="24" min="1" step="1"></div>
+                <button class="calculate-btn" onclick="calculateCompound()">Calculate Growth</button>
+                <div class="calculator-desc">Simulate growth with monthly contributions and compound returns — shows total invested, interest earned and final balance.</div>
+                <div class="results" id="compoundResults">
+                    <div class="result-item"><span class="result-label">Total Invested</span><span class="result-value" id="compoundInvested">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Interest Earned</span><span class="result-value" id="compoundInterest">$0</span></div>
+                    <div class="result-item"><span class="result-label">Final Portfolio Value</span><span class="result-value" id="compoundFinal">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Profit</span><span class="result-value" id="compoundProfit">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Currency -->
+            <div class="calculator-card" data-name="Currency Converter" id="currencyCard">
+                <div class="calculator-header"><h3 class="calculator-title">Currency Converter</h3></div>
+                <div class="input-group"><label>Amount</label><input type="number" id="currencyAmount" placeholder="100" min="0" step="0.01"></div>
+                <div class="input-group"><label>From Currency</label>
+                    <select id="currencyFrom"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN">PLN</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="CNY">CNY</option><option value="INR">INR</option></select>
+                </div>
+                <div class="input-group"><label>To Currency</label>
+                    <select id="currencyTo"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN" selected>PLN</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="CNY">CNY</option><option value="INR">INR</option></select>
+                </div>
+                <button class="calculate-btn" onclick="calculateCurrency()">Convert Currency</button>
+                <div class="calculator-desc">Quickly convert between currencies using built-in exchange rates — useful for fast estimates and travel planning.</div>
+                <div class="results" id="currencyResults">
+                    <div class="result-item"><span class="result-label">From</span><span class="result-value" id="currencyFromValue">--</span></div>
+                    <div class="result-item"><span class="result-label">To</span><span class="result-value" id="currencyToValue">--</span></div>
+                    <div class="result-item"><span class="result-label">Exchange Rate</span><span class="result-value" id="currencyRate">--</span></div>
+                </div>
+            </div>
+
+            <!-- Dividend -->
+            <div class="calculator-card" data-name="Dividend Calculator" id="divCard">
+                <div class="calculator-header"><h3 class="calculator-title">Dividend Calculator</h3></div>
+                <div class="input-group"><label>Number of Shares</label><input type="number" id="divShares" placeholder="100" min="0" step="1"></div>
+                <div class="input-group"><label>Dividend per Share ($)</label><input type="number" id="divPerShare" placeholder="2.50" min="0" step="0.01"></div>
+                <div class="input-group"><label>Dividend Frequency (times/year)</label><input type="number" id="divFrequency" placeholder="4" min="1" step="1"></div>
+                <button class="calculate-btn" onclick="calculateDividend()">Calculate Income</button>
+                <div class="calculator-desc">Compute annual and monthly dividend income from your holdings based on dividend per share and frequency.</div>
+                <div class="results" id="divResults">
+                    <div class="result-item"><span class="result-label">Annual Dividend Income</span><span class="result-value" id="divIncome">$0</span></div>
+                    <div class="result-item"><span class="result-label">Monthly Income</span><span class="result-value" id="divMonthly">$0</span></div>
+                </div>
+            </div>
+
+            <!-- ROI -->
+            <div class="calculator-card" data-name="ROI Calculator" id="roiCard">
+                <div class="calculator-header"><h3 class="calculator-title">ROI Calculator</h3></div>
+                <div class="input-group"><label>Initial Investment ($)</label><input type="number" id="roiInitial" placeholder="50000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Final Value ($)</label><input type="number" id="roiFinal" placeholder="75000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Time Period (Years)</label><input type="number" id="roiYears" placeholder="2" min="0.1" step="0.1"></div>
+                <button class="calculate-btn" onclick="calculateROI()">Calculate ROI</button>
+                <div class="calculator-desc">Measure total and annualized return on investment to compare performance across opportunities or timeframes.</div>
+                <div class="results" id="roiResults">
+                    <div class="result-item"><span class="result-label">Total Return ($)</span><span class="result-value" id="roiReturn">$0</span></div>
+                    <div class="result-item"><span class="result-label">ROI Percentage</span><span class="result-value" id="roiPercent">0%</span></div>
+                    <div class="result-item"><span class="result-label">Annual ROI</span><span class="result-value" id="roiAnnual">0%</span></div>
+                </div>
+            </div>
+
+            <!-- Loan (Kredyt) -->
+            <div class="calculator-card" data-name="Loan Calculator" id="loanCard">
+                <div class="calculator-header"><h3 class="calculator-title">Loan Calculator</h3></div>
+                <div class="input-group"><label>Loan Amount ($)</label><input type="number" id="loanAmount" placeholder="100000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Annual Interest Rate (%)</label><input type="number" id="loanRate" placeholder="5.5" min="0" step="0.01"></div>
+                <div class="input-group"><label>Loan Term (Years)</label><input type="number" id="loanTerm" placeholder="5" min="1" step="1"></div>
+                <button class="calculate-btn" onclick="calculateLoan()">Calculate Payment</button>
+                <div class="calculator-desc">Compute monthly payments, total interest and total amount paid for installment loans given rate and term.</div>
+                <div class="results" id="loanResults">
+                    <div class="result-item"><span class="result-label">Monthly Payment</span><span class="result-value" id="loanMonthly">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Interest</span><span class="result-value" id="loanInterest">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Amount Paid</span><span class="result-value" id="loanTotal">$0</span></div>
+                </div>
+            </div>
+
+            <!-- Mortgage (Hipoteka) -->
+            <div class="calculator-card" data-name="Mortgage Calculator" id="mortCard">
+                <div class="calculator-header"><h3 class="calculator-title">Mortgage Calculator</h3></div>
+                <div class="input-group"><label>Home Price ($)</label><input type="number" id="mortPrice" placeholder="500000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Down Payment ($)</label><input type="number" id="mortDown" placeholder="100000" min="0" step="0.01"></div>
+                <div class="input-group"><label>Annual Interest Rate (%)</label><input type="number" id="mortRate" placeholder="3.5" min="0" step="0.01"></div>
+                <div class="input-group"><label>Loan Term (Years)</label><input type="number" id="mortTerm" placeholder="30" min="1" step="1"></div>
+                <button class="calculate-btn" onclick="calculateMortgage()">Calculate Payment</button>
+                <div class="calculator-desc">Designed for home loans — shows loan amount after down payment, monthly mortgage payment, total interest and total paid.</div>
+                <div class="results" id="mortResults">
+                    <div class="result-item"><span class="result-label">Loan Amount</span><span class="result-value" id="mortLoan">$0</span></div>
+                    <div class="result-item"><span class="result-label">Monthly Payment</span><span class="result-value" id="mortMonthly">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Interest</span><span class="result-value" id="mortInterest">$0</span></div>
+                    <div class="result-item"><span class="result-label">Total Amount Paid</span><span class="result-value" id="mortTotal">$0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Calculators -->
+        <div class="top-section" aria-labelledby="top-title">
+            <h3 id="top-title" style="text-align:center; color:var(--accent-primary); margin-top:1.25rem;">Top Calculators</h3>
+            <p style="text-align:center; color:var(--text-secondary); margin-top:0.45rem;">Quick access to the most popular tools</p>
+
+            <div class="top-grid" role="list">
+                <div class="top-card" role="listitem">
+                    <h4>Bitcoin Profit Calculator</h4>
+                    <p>Analyze BTC investment returns quickly.</p>
+                    <a class="open-btn" href="#btcCard">Open Bitcoin Calculator</a>
+                </div>
+                <div class="top-card" role="listitem">
+                    <h4>Stock Profit Calculator</h4>
+                    <p>Compute shares, profit and returns for stocks.</p>
+                    <a class="open-btn" href="#stockCard">Open Stock Calculator</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about">
+        <h2 class="section-title">About CryptoStats</h2>
+        <div class="about-content">
+            <p class="about-text">
+                Welcome to CryptoStats, your ultimate financial planning companion. We are dedicated to empowering investors and financial enthusiasts with cutting-edge tools to calculate, analyze, and optimize their investment strategies. Whether you're a seasoned trader or just beginning your investment journey, CryptoStats provides professional-grade calculators designed for accuracy and ease of use.
+            </p>
+            <p class="about-text">
+                Our mission is to democratize financial planning by making sophisticated investment calculations accessible to everyone. We believe that informed decisions lead to better financial outcomes. That's why we've created a comprehensive suite of calculators that handle complex mathematical computations instantly, allowing you to focus on what matters most – your financial future.
+            </p>
+            <p class="about-text">
+                All calculations are performed locally in your browser, ensuring complete privacy and security. Get instant results without waiting times or server dependencies. Manage your investments anytime, anywhere with our responsive design that works seamlessly on desktop, tablet, or mobile devices.
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer with contact email -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">CryptoStats</div>
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <a href="#calculators" style="color:var(--text-secondary); text-decoration:none;">Calculators</a>
+                <a href="#about" style="color:var(--text-secondary); text-decoration:none;">About</a>
+            </div>
+            <div style="color:var(--text-secondary);">
+                Contact: <a href="mailto:cryptostats.buisness@gmail.com" style="color:var(--accent-primary); text-decoration:none;">cryptostats.buisness@gmail.com</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // mobile menu toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        if (mobileMenu) mobileMenu.addEventListener('click', ()=> navLinks.classList.toggle('active'));
+
+        // calculators list for search (include all)
+        const calculators = [
+            'Stock Profit Calculator','Bitcoin Profit Calculator','Ethereum Profit Calculator',
+            'Compound Interest Calculator','Currency Converter','Dividend Calculator',
+            'ROI Calculator','Loan Calculator','Mortgage Calculator'
+        ];
+
+        const searchBox = document.getElementById('searchBox');
+        const searchResults = document.getElementById('searchResults');
+
+        searchBox.addEventListener('input', (e)=>{
+            const q = (e.target.value || '').toLowerCase().trim();
+            if (!q){ searchResults.classList.remove('show'); searchResults.innerHTML = ''; return; }
+            const filtered = calculators.filter(c => c.toLowerCase().includes(q));
+            if (filtered.length === 0){
+                searchResults.innerHTML = '<div class="search-result-item">No calculators found</div>';
+                searchResults.classList.add('show'); return;
+            }
+            searchResults.innerHTML = filtered.map(c => `<div class="search-result-item" role="option" onclick="scrollToCalc('${c.replace(/'/g,"\\'")}')">${c}</div>`).join('');
+            searchResults.classList.add('show');
+        });
+
+        document.addEventListener('click', (e)=>{
+            if (e.target !== searchBox && !searchResults.contains(e.target)) searchResults.classList.remove('show');
+        });
+
+        function scrollToCalc(name){
+            const el = document.querySelector(`[data-name="${name}"]`);
+            if (el){
+                el.scrollIntoView({behavior:'smooth', block:'start'});
+                el.style.borderColor = 'rgba(255,215,0,0.45)';
+                setTimeout(()=> el.style.borderColor = 'rgba(255,255,255,0.03)', 1800);
+            }
+            searchResults.classList.remove('show');
+            searchBox.value = '';
+        }
+
+        function openSearchResults(){
+            const ev = new Event('input'); searchBox.dispatchEvent(ev); searchBox.focus();
+        }
+
+        // helpers
+        function formatCurrency(v){ return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(v); }
+        function formatPercent(v){ const s = v>=0?'+':''; return s+v.toFixed(2)+'%'; }
+
+        // Stock
+        function calculateStock(){
+            const investment = parseFloat(document.getElementById('stockInvestment').value) || 0;
+            const buy = parseFloat(document.getElementById('stockBuyPrice').value) || 0;
+            const sell = parseFloat(document.getElementById('stockSellPrice').value) || 0;
+            if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; }
+            const shares = investment / buy;
+            const finalValue = shares * sell;
+            const profit = finalValue - investment;
+            const percent = ((sell - buy)/buy)*100;
+            document.getElementById('stockShares').textContent = shares.toFixed(2);
+            document.getElementById('stockProfit').textContent = formatCurrency(profit);
+            document.getElementById('stockProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative');
+            document.getElementById('stockPercent').textContent = formatPercent(percent);
+            document.getElementById('stockFinal').textContent = formatCurrency(finalValue);
+            document.getElementById('stockResults').classList.add('show');
+        }
+
+        function calculateBitcoin(){ const investment = parseFloat(document.getElementById('btcInvestment').value) || 0; const buy = parseFloat(document.getElementById('btcBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('btcSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const amount = investment / buy; const finalValue = amount * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('btcAmount').textContent = amount.toFixed(8) + ' BTC'; document.getElementById('btcProfit').textContent = formatCurrency(profit); document.getElementById('btcProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('btcPercent').textContent = formatPercent(percent); document.getElementById('btcFinal').textContent = formatCurrency(finalValue); document.getElementById('btcResults').classList.add('show'); }
+        function calculateEthereum(){ const investment = parseFloat(document.getElementById('ethInvestment').value) || 0; const buy = parseFloat(document.getElementById('ethBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('ethSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const amount = investment / buy; const finalValue = amount * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('ethAmount').textContent = amount.toFixed(8) + ' ETH'; document.getElementById('ethProfit').textContent = formatCurrency(profit); document.getElementById('ethProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('ethPercent').textContent = formatPercent(percent); document.getElementById('ethFinal').textContent = formatCurrency(finalValue); document.getElementById('ethResults').classList.add('show'); }
+        function calculateCompound(){ const initial = parseFloat(document.getElementById('compoundInitial').value) || 0; const monthly = parseFloat(document.getElementById('compoundMonthly').value) || 0; const rate = (parseFloat(document.getElementById('compoundReturn').value) || 0)/100; const months = parseInt(document.getElementById('compoundDuration').value) || 0; if (months<=0 || (initial<=0 && monthly<=0)){ alert('Please enter valid positive numbers'); return; } let balance = initial; const totalContrib = initial + monthly*months; for (let i=0;i<months;i++){ balance = balance*(1+rate) + monthly; } const interest = balance - totalContrib; document.getElementById('compoundInvested').textContent = formatCurrency(totalContrib); document.getElementById('compoundInterest').textContent = formatCurrency(interest); document.getElementById('compoundFinal').textContent = formatCurrency(balance); document.getElementById('compoundProfit').textContent = formatCurrency(interest); document.getElementById('compoundResults').classList.add('show'); }
+        function calculateCurrency(){ const amount = parseFloat(document.getElementById('currencyAmount').value) || 0; const from = document.getElementById('currencyFrom').value; const to = document.getElementById('currencyTo').value; if (amount<=0){ alert('Please enter a valid positive amount'); return; } const exchangeRates = {'USD':1,'EUR':0.92,'GBP':0.79,'JPY':149.5,'PLN':4.02,'CHF':0.88,'CAD':1.36,'AUD':1.53,'CNY':7.24,'INR':83.12}; const amountUSD = amount / exchangeRates[from]; const converted = amountUSD * exchangeRates[to]; const rate = exchangeRates[to] / exchangeRates[from]; document.getElementById('currencyFromValue').textContent = amount.toFixed(2) + ' ' + from; document.getElementById('currencyToValue').textContent = converted.toFixed(2) + ' ' + to; document.getElementById('currencyRate').textContent = (1/rate).toFixed(4) + ' ' + from + ' = 1 ' + to; document.getElementById('currencyResults').classList.add('show'); }
+        function calculateDividend(){ const shares = parseInt(document.getElementById('divShares').value) || 0; const perShare = parseFloat(document.getElementById('divPerShare').value) || 0; const frequency = parseInt(document.getElementById('divFrequency').value) || 0; if (shares<=0 || perShare<=0 || frequency<=0){ alert('Please enter valid positive numbers'); return; } const annual = shares * perShare * frequency; const monthly = annual / 12; document.getElementById('divIncome').textContent = formatCurrency(annual); document.getElementById('divMonthly').textContent = formatCurrency(monthly); document.getElementById('divResults').classList.add('show'); }
+        function calculateROI(){ const initial = parseFloat(document.getElementById('roiInitial').value) || 0; const final = parseFloat(document.getElementById('roiFinal').value) || 0; const years = parseFloat(document.getElementById('roiYears').value) || 0; if (initial<=0 || years<=0){ alert('Please enter valid positive numbers'); return; } const totalReturn = final - initial; const roiPercent = (totalReturn / initial) * 100; const annualROI = (Math.pow(final / initial, 1 / years) - 1) * 100; document.getElementById('roiReturn').textContent = formatCurrency(totalReturn); document.getElementById('roiPercent').textContent = formatPercent(roiPercent); document.getElementById('roiAnnual').textContent = formatPercent(annualROI); document.getElementById('roiResults').classList.add('show'); }
+        function calculateLoan(){ const amount = parseFloat(document.getElementById('loanAmount').value) || 0; const rate = parseFloat(document.getElementById('loanRate').value) / 100 / 12 || 0; const term = parseInt(document.getElementById('loanTerm').value) * 12 || 0; if (amount<=0 || term<=0){ alert('Please enter valid positive numbers'); return; } const monthly = amount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1); const totalPaid = monthly * term; const totalInterest = totalPaid - amount; document.getElementById('loanMonthly').textContent = formatCurrency(monthly); document.getElementById('loanInterest').textContent = formatCurrency(totalInterest); document.getElementById('loanTotal').textContent = formatCurrency(totalPaid); document.getElementById('loanResults').classList.add('show'); }
+        function calculateMortgage(){ const price = parseFloat(document.getElementById('mortPrice').value) || 0; const down = parseFloat(document.getElementById('mortDown').value) || 0; const rate = parseFloat(document.getElementById('mortRate').value) / 100 / 12 || 0; const term = parseInt(document.getElementById('mortTerm').value) * 12 || 0; if (price<=0 || term<=0){ alert('Please enter valid positive numbers'); return; } const loan = price - down; const monthly = loan * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1); const totalPaid = monthly * term; const totalInterest = totalPaid - loan; document.getElementById('mortLoan').textContent = formatCurrency(loan); document.getElementById('mortMonthly').textContent = formatCurrency(monthly); document.getElementById('mortInterest').textContent = formatCurrency(totalInterest); document.getElementById('mortTotal').textContent = formatCurrency(totalPaid); document.getElementById('mortResults').classList.add('show'); }
+
+        // adjust scroll offset for fixed nav when opening top-card anchors
+        document.querySelectorAll('.open-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=> setTimeout(()=> window.scrollBy(0,-70), 420));
+        });
+
+        // smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(a=>{
+            a.addEventListener('click', function(e){
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+            });
+        });
+    </script>
+</body>
+</html>
