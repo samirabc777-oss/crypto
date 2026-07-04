@@ -32,14 +32,46 @@
             -moz-osx-font-smoothing:grayscale;
         }
 
-        /* subtle neon background bars */
-        .bg-bars{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-        .bar{ position:absolute; bottom:0; background:linear-gradient(180deg, rgba(0,255,150,0.08), rgba(0,255,150,0.02)); opacity:0.25; }
-        .bar-1{ width:50px; height:35%; left:10%; animation:sway 6s ease-in-out infinite; }
-        .bar-2{ width:45px; height:28%; right:18%; animation:sway 7s ease-in-out infinite 1s; }
-        .bar-3{ width:48px; height:40%; left:30%; animation:sway 8s ease-in-out infinite 2s; }
-        @keyframes sway{
-            0%,100%{ transform:scaleY(1); opacity:0.25; } 50%{ transform:scaleY(1.08); opacity:0.35; }
+        /* Neonowe żółte tło */
+        body::before{
+            content:'';
+            position:fixed;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,237,78,0.08) 0%, transparent 50%);
+            pointer-events:none;
+            z-index:0;
+        }
+
+        /* Złota poświata po lewej stronie */
+        body::after{
+            content:'';
+            position:fixed;
+            left:-200px;
+            top:50%;
+            width:600px;
+            height:600px;
+            background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, transparent 70%);
+            filter: blur(80px);
+            pointer-events:none;
+            z-index:0;
+            animation: glowPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse{
+            0%, 100%{ opacity:0.5; transform:translateY(0) scale(1); }
+            50%{ opacity:1; transform:translateY(-30px) scale(1.1); }
+        }
+
+        /* canvas background */
+        #bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
         }
 
         /* decorative background */
@@ -95,7 +127,7 @@
         }
         .search-btn:active{ transform: translateY(1px); }
 
-        .search-results{ position:absolute; top:calc(100% + 0.5rem); left:0; right:0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; display:none; max-height:260px; overflow:auto; z-index:20; }
+        .search-results{ position:absolute; top:calc(100% + 0.5rem); left:0; right:0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; display:none; max-height:300px; overflow-y:auto; z-index:10; }
         .search-results.show{ display:block; }
         .search-result-item{ padding:0.85rem 1rem; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.02); cursor:pointer; }
         .search-result-item:hover{ color:var(--accent-primary); background:rgba(255,255,255,0.02); padding-left:1.05rem; }
@@ -193,7 +225,8 @@
         .top-card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border:1px solid rgba(255,255,255,0.03); padding:1rem; border-radius:10px; display:flex; flex-direction:column; gap:0.6rem; }
         .top-card h4{ margin:0; color:var(--text-primary); }
         .top-card p{ color:var(--text-secondary); font-size:0.95rem; }
-        .open-btn{ margin-top:auto; align-self:flex-start; padding:0.55rem 0.8rem; border-radius:8px; background:transparent; border:1px solid var(--accent-primary); color:var(--accent-primary); text-decoration:none; font-weight:700; }
+        .open-btn{ margin-top:auto; align-self:flex-start; padding:0.55rem 0.8rem; border-radius:8px; background:transparent; border:1px solid var(--accent-primary); color:var(--accent-primary); text-decoration:none; font-size:0.9rem; transition:all .2s; cursor:pointer; }
+        .open-btn:hover{ background:rgba(255,215,0,0.1); }
 
         /* about */
         .about-text{ color:var(--text-secondary); line-height:1.6; }
@@ -209,11 +242,7 @@
     </style>
 </head>
 <body>
-    <div class="bg-bars">
-        <div class="bar bar-1"></div>
-        <div class="bar bar-2"></div>
-        <div class="bar bar-3"></div>
-    </div>
+    <canvas id="bg"></canvas>
 
     <div class="bitcoin-bg" aria-hidden="true">
         <div class="bitcoin-logo" style="top:8%; left:8%;">₿</div>
@@ -332,10 +361,10 @@
                 <div class="calculator-header"><h3 class="calculator-title">Currency Converter</h3></div>
                 <div class="input-group"><label>Amount</label><input type="number" id="currencyAmount" placeholder="100" min="0" step="0.01"></div>
                 <div class="input-group"><label>From Currency</label>
-                    <select id="currencyFrom"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN">PLN</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="CNY">CNY</option><option value="INR">INR</option></select>
+                    <select id="currencyFrom"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN">PLN</option></select>
                 </div>
                 <div class="input-group"><label>To Currency</label>
-                    <select id="currencyTo"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN" selected>PLN</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="CNY">CNY</option><option value="INR">INR</option></select>
+                    <select id="currencyTo"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="PLN" selected>PLN</option></select>
                 </div>
                 <button class="calculate-btn" onclick="calculateCurrency()">Convert Currency</button>
                 <div class="calculator-desc">Quickly convert between currencies using built-in exchange rates — useful for fast estimates and travel planning.</div>
@@ -433,13 +462,13 @@
         <h2 class="section-title">About CryptoStats</h2>
         <div class="about-content">
             <p class="about-text">
-                Welcome to CryptoStats, your ultimate financial planning companion. We are dedicated to empowering investors and financial enthusiasts with cutting-edge tools to calculate, analyze, and optimize their investment strategies. Whether you're a seasoned trader or just beginning your investment journey, CryptoStats provides professional-grade calculators designed for accuracy and ease of use.
+                Welcome to CryptoStats, your ultimate financial planning companion. We are dedicated to empowering investors and financial enthusiasts with cutting-edge tools to calculate, analyze, and optimize your investments. Whether you're tracking stocks, Bitcoin, Ethereum, or planning compound interest growth, we've got you covered with precision and ease.
             </p>
             <p class="about-text">
-                Our mission is to democratize financial planning by making sophisticated investment calculations accessible to everyone. We believe that informed decisions lead to better financial outcomes. That's why we've created a comprehensive suite of calculators that handle complex mathematical computations instantly, allowing you to focus on what matters most – your financial future.
+                Our mission is to democratize financial planning by making sophisticated investment calculations accessible to everyone. We believe that informed decisions lead to better financial outcomes. Our suite of calculators covers everything from simple profit calculations to complex compound interest scenarios and mortgage planning.
             </p>
             <p class="about-text">
-                All calculations are performed locally in your browser, ensuring complete privacy and security. Get instant results without waiting times or server dependencies. Manage your investments anytime, anywhere with our responsive design that works seamlessly on desktop, tablet, or mobile devices.
+                All calculations are performed locally in your browser, ensuring complete privacy and security. Get instant results without waiting times or server dependencies. Manage your investments with confidence, knowing your data never leaves your device.
             </p>
         </div>
     </section>
@@ -459,6 +488,46 @@
     </footer>
 
     <script>
+        // Stock market background animation
+        const canvas = document.getElementById("bg");
+        const ctx = canvas.getContext("2d");
+
+        let w, h;
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // linie trendu
+        let lines = Array.from({length: 25}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            dx: (Math.random() - 0.5) * 2,
+            dy: (Math.random() - 0.5) * 2,
+            value: Math.random() > 0.5
+        }));
+
+        // słupki
+        let bars = Array.from({length: 20}, (_, i) => ({
+            x: i * 80,
+            h: Math.random() * h,
+            speed: 1 + Math.random() * 2,
+            up: Math.random() > 0.5
+        }));
+
+        function drawBackground() {
+            ctx.fillStyle = "#0b0f14";
+            ctx.fillRect(0, 0, w, h);
+
+         
+
+            requestAnimationFrame(drawBackground);
+        }
+
+        drawBackground();
+
         // mobile menu toggle
         const mobileMenu = document.getElementById('mobileMenu');
         const navLinks = document.getElementById('navLinks');
@@ -527,14 +596,14 @@
             document.getElementById('stockResults').classList.add('show');
         }
 
-        function calculateBitcoin(){ const investment = parseFloat(document.getElementById('btcInvestment').value) || 0; const buy = parseFloat(document.getElementById('btcBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('btcSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const amount = investment / buy; const finalValue = amount * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('btcAmount').textContent = amount.toFixed(8) + ' BTC'; document.getElementById('btcProfit').textContent = formatCurrency(profit); document.getElementById('btcProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('btcPercent').textContent = formatPercent(percent); document.getElementById('btcFinal').textContent = formatCurrency(finalValue); document.getElementById('btcResults').classList.add('show'); }
-        function calculateEthereum(){ const investment = parseFloat(document.getElementById('ethInvestment').value) || 0; const buy = parseFloat(document.getElementById('ethBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('ethSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const amount = investment / buy; const finalValue = amount * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('ethAmount').textContent = amount.toFixed(8) + ' ETH'; document.getElementById('ethProfit').textContent = formatCurrency(profit); document.getElementById('ethProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('ethPercent').textContent = formatPercent(percent); document.getElementById('ethFinal').textContent = formatCurrency(finalValue); document.getElementById('ethResults').classList.add('show'); }
-        function calculateCompound(){ const initial = parseFloat(document.getElementById('compoundInitial').value) || 0; const monthly = parseFloat(document.getElementById('compoundMonthly').value) || 0; const rate = (parseFloat(document.getElementById('compoundReturn').value) || 0)/100; const months = parseInt(document.getElementById('compoundDuration').value) || 0; if (months<=0 || (initial<=0 && monthly<=0)){ alert('Please enter valid positive numbers'); return; } let balance = initial; const totalContrib = initial + monthly*months; for (let i=0;i<months;i++){ balance = balance*(1+rate) + monthly; } const interest = balance - totalContrib; document.getElementById('compoundInvested').textContent = formatCurrency(totalContrib); document.getElementById('compoundInterest').textContent = formatCurrency(interest); document.getElementById('compoundFinal').textContent = formatCurrency(balance); document.getElementById('compoundProfit').textContent = formatCurrency(interest); document.getElementById('compoundResults').classList.add('show'); }
-        function calculateCurrency(){ const amount = parseFloat(document.getElementById('currencyAmount').value) || 0; const from = document.getElementById('currencyFrom').value; const to = document.getElementById('currencyTo').value; if (amount<=0){ alert('Please enter a valid positive amount'); return; } const exchangeRates = {'USD':1,'EUR':0.92,'GBP':0.79,'JPY':149.5,'PLN':4.02,'CHF':0.88,'CAD':1.36,'AUD':1.53,'CNY':7.24,'INR':83.12}; const amountUSD = amount / exchangeRates[from]; const converted = amountUSD * exchangeRates[to]; const rate = exchangeRates[to] / exchangeRates[from]; document.getElementById('currencyFromValue').textContent = amount.toFixed(2) + ' ' + from; document.getElementById('currencyToValue').textContent = converted.toFixed(2) + ' ' + to; document.getElementById('currencyRate').textContent = (1/rate).toFixed(4) + ' ' + from + ' = 1 ' + to; document.getElementById('currencyResults').classList.add('show'); }
-        function calculateDividend(){ const shares = parseInt(document.getElementById('divShares').value) || 0; const perShare = parseFloat(document.getElementById('divPerShare').value) || 0; const frequency = parseInt(document.getElementById('divFrequency').value) || 0; if (shares<=0 || perShare<=0 || frequency<=0){ alert('Please enter valid positive numbers'); return; } const annual = shares * perShare * frequency; const monthly = annual / 12; document.getElementById('divIncome').textContent = formatCurrency(annual); document.getElementById('divMonthly').textContent = formatCurrency(monthly); document.getElementById('divResults').classList.add('show'); }
-        function calculateROI(){ const initial = parseFloat(document.getElementById('roiInitial').value) || 0; const final = parseFloat(document.getElementById('roiFinal').value) || 0; const years = parseFloat(document.getElementById('roiYears').value) || 0; if (initial<=0 || years<=0){ alert('Please enter valid positive numbers'); return; } const totalReturn = final - initial; const roiPercent = (totalReturn / initial) * 100; const annualROI = (Math.pow(final / initial, 1 / years) - 1) * 100; document.getElementById('roiReturn').textContent = formatCurrency(totalReturn); document.getElementById('roiPercent').textContent = formatPercent(roiPercent); document.getElementById('roiAnnual').textContent = formatPercent(annualROI); document.getElementById('roiResults').classList.add('show'); }
-        function calculateLoan(){ const amount = parseFloat(document.getElementById('loanAmount').value) || 0; const rate = parseFloat(document.getElementById('loanRate').value) / 100 / 12 || 0; const term = parseInt(document.getElementById('loanTerm').value) * 12 || 0; if (amount<=0 || term<=0){ alert('Please enter valid positive numbers'); return; } const monthly = amount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1); const totalPaid = monthly * term; const totalInterest = totalPaid - amount; document.getElementById('loanMonthly').textContent = formatCurrency(monthly); document.getElementById('loanInterest').textContent = formatCurrency(totalInterest); document.getElementById('loanTotal').textContent = formatCurrency(totalPaid); document.getElementById('loanResults').classList.add('show'); }
-        function calculateMortgage(){ const price = parseFloat(document.getElementById('mortPrice').value) || 0; const down = parseFloat(document.getElementById('mortDown').value) || 0; const rate = parseFloat(document.getElementById('mortRate').value) / 100 / 12 || 0; const term = parseInt(document.getElementById('mortTerm').value) * 12 || 0; if (price<=0 || term<=0){ alert('Please enter valid positive numbers'); return; } const loan = price - down; const monthly = loan * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1); const totalPaid = monthly * term; const totalInterest = totalPaid - loan; document.getElementById('mortLoan').textContent = formatCurrency(loan); document.getElementById('mortMonthly').textContent = formatCurrency(monthly); document.getElementById('mortInterest').textContent = formatCurrency(totalInterest); document.getElementById('mortTotal').textContent = formatCurrency(totalPaid); document.getElementById('mortResults').classList.add('show'); }
+        function calculateBitcoin(){ const investment = parseFloat(document.getElementById('btcInvestment').value) || 0; const buy = parseFloat(document.getElementById('btcBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('btcSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const btc = investment / buy; const finalValue = btc * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('btcAmount').textContent = btc.toFixed(8) + ' BTC'; document.getElementById('btcProfit').textContent = formatCurrency(profit); document.getElementById('btcProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('btcPercent').textContent = formatPercent(percent); document.getElementById('btcFinal').textContent = formatCurrency(finalValue); document.getElementById('btcResults').classList.add('show'); }
+        function calculateEthereum(){ const investment = parseFloat(document.getElementById('ethInvestment').value) || 0; const buy = parseFloat(document.getElementById('ethBuyPrice').value) || 0; const sell = parseFloat(document.getElementById('ethSellPrice').value) || 0; if (investment<=0 || buy<=0){ alert('Please enter valid positive numbers'); return; } const eth = investment / buy; const finalValue = eth * sell; const profit = finalValue - investment; const percent = ((sell - buy)/buy)*100; document.getElementById('ethAmount').textContent = eth.toFixed(8) + ' ETH'; document.getElementById('ethProfit').textContent = formatCurrency(profit); document.getElementById('ethProfit').className = 'result-value ' + (profit>=0 ? 'positive' : 'negative'); document.getElementById('ethPercent').textContent = formatPercent(percent); document.getElementById('ethFinal').textContent = formatCurrency(finalValue); document.getElementById('ethResults').classList.add('show'); }
+        function calculateCompound(){ const initial = parseFloat(document.getElementById('compoundInitial').value) || 0; const monthly = parseFloat(document.getElementById('compoundMonthly').value) || 0; const rate = parseFloat(document.getElementById('compoundReturn').value) / 100 || 0; const months = parseInt(document.getElementById('compoundDuration').value) || 0; if (initial<0 || monthly<0 || rate<0 || months<=0){ alert('Please enter valid numbers'); return; } let balance = initial; let invested = initial; for (let i = 0; i < months; i++){ balance += monthly; balance *= (1 + rate); invested += monthly; } const interest = balance - invested; const profit = balance - (initial + monthly * months); document.getElementById('compoundInvested').textContent = formatCurrency(invested); document.getElementById('compoundInterest').textContent = formatCurrency(interest); document.getElementById('compoundFinal').textContent = formatCurrency(balance); document.getElementById('compoundProfit').textContent = formatCurrency(profit); document.getElementById('compoundResults').classList.add('show'); }
+        function calculateCurrency(){ const amount = parseFloat(document.getElementById('currencyAmount').value) || 0; const from = document.getElementById('currencyFrom').value; const to = document.getElementById('currencyTo').value; const rates = {USD:1, EUR:0.92, GBP:0.79, JPY:149.5, PLN:4.0}; if (amount<=0){ alert('Please enter a positive amount'); return; } const result = amount * (rates[to] / rates[from]); document.getElementById('currencyFromValue').textContent = formatCurrency(amount) + ' ' + from; document.getElementById('currencyToValue').textContent = formatCurrency(result) + ' ' + to; document.getElementById('currencyRate').textContent = '1 ' + from + ' = ' + (rates[to]/rates[from]).toFixed(4) + ' ' + to; document.getElementById('currencyResults').classList.add('show'); }
+        function calculateDividend(){ const shares = parseInt(document.getElementById('divShares').value) || 0; const perShare = parseFloat(document.getElementById('divPerShare').value) || 0; const freq = parseInt(document.getElementById('divFrequency').value) || 0; if (shares<0 || perShare<0 || freq<=0){ alert('Please enter valid numbers'); return; } const annual = shares * perShare * freq; const monthly = annual / 12; document.getElementById('divIncome').textContent = formatCurrency(annual); document.getElementById('divMonthly').textContent = formatCurrency(monthly); document.getElementById('divResults').classList.add('show'); }
+        function calculateROI(){ const initial = parseFloat(document.getElementById('roiInitial').value) || 0; const final = parseFloat(document.getElementById('roiFinal').value) || 0; const years = parseFloat(document.getElementById('roiYears').value) || 0; if (initial<=0 || years<=0){ alert('Please enter valid positive numbers'); return; } const totalReturn = final - initial; const roiPercent = (totalReturn / initial) * 100; const annualROI = (Math.pow(final/initial, 1/years) - 1) * 100; document.getElementById('roiReturn').textContent = formatCurrency(totalReturn); document.getElementById('roiPercent').textContent = formatPercent(roiPercent); document.getElementById('roiAnnual').textContent = formatPercent(annualROI); document.getElementById('roiResults').classList.add('show'); }
+        function calculateLoan(){ const amount = parseFloat(document.getElementById('loanAmount').value) || 0; const rate = parseFloat(document.getElementById('loanRate').value) / 100 / 12 || 0; const years = parseInt(document.getElementById('loanTerm').value) || 0; if (amount<=0 || years<=0){ alert('Please enter valid positive numbers'); return; } const months = years * 12; const monthly = amount * (rate * Math.pow(1+rate, months)) / (Math.pow(1+rate, months) - 1); const total = monthly * months; const interest = total - amount; document.getElementById('loanMonthly').textContent = formatCurrency(monthly); document.getElementById('loanInterest').textContent = formatCurrency(interest); document.getElementById('loanTotal').textContent = formatCurrency(total); document.getElementById('loanResults').classList.add('show'); }
+        function calculateMortgage(){ const price = parseFloat(document.getElementById('mortPrice').value) || 0; const down = parseFloat(document.getElementById('mortDown').value) || 0; const rate = parseFloat(document.getElementById('mortRate').value) / 100 / 12 || 0; const years = parseInt(document.getElementById('mortTerm').value) || 0; if (price<=0 || years<=0){ alert('Please enter valid positive numbers'); return; } const principal = price - down; const months = years * 12; const monthly = principal * (rate * Math.pow(1+rate, months)) / (Math.pow(1+rate, months) - 1); const total = monthly * months; const interest = total - principal; document.getElementById('mortLoan').textContent = formatCurrency(principal); document.getElementById('mortMonthly').textContent = formatCurrency(monthly); document.getElementById('mortInterest').textContent = formatCurrency(interest); document.getElementById('mortTotal').textContent = formatCurrency(total); document.getElementById('mortResults').classList.add('show'); }
 
         // adjust scroll offset for fixed nav when opening top-card anchors
         document.querySelectorAll('.open-btn').forEach(btn=>{
