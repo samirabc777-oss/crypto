@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tło giełdowe</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #0b0f14;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+let w, h;
+function resize() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+// linie trendu
+let lines = Array.from({length: 25}, () => ({
+  x: Math.random() * w,
+  y: Math.random() * h,
+  dx: (Math.random() - 0.5) * 2,
+  dy: (Math.random() - 0.5) * 2,
+  value: Math.random() > 0.5
+}));
+
+// słupki
+let bars = Array.from({length: 20}, (_, i) => ({
+  x: i * 80,
+  h: Math.random() * h,
+  speed: 1 + Math.random() * 2,
+  up: Math.random() > 0.5
+}));
+
+function draw() {
+  ctx.fillStyle = "#0b0f14";
+  ctx.fillRect(0, 0, w, h);
+
+  // linie (trend)
+  for (let p of lines) {
+    ctx.beginPath();
+    ctx.strokeStyle = p.value ? "rgba(0,255,120,0.6)" : "rgba(255,50,50,0.6)";
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x + 20, p.y + 20);
+    ctx.stroke();
+
+    p.x += p.dx;
+    p.y += p.dy;
+
+    if (p.x < 0 || p.x > w) p.dx *= -1;
+    if (p.y < 0 || p.y > h) p.dy *= -1;
+  }
+
+  // słupki
+  bars.forEach(b => {
+    ctx.fillStyle = b.up ? "rgba(0,255,120,0.3)" : "rgba(255,50,50,0.3)";
+    ctx.fillRect(b.x, h - b.h, 40, b.h);
+
+    b.h += (b.up ? 1 : -1) * b.speed;
+
+    if (b.h < 20) b.up = true;
+    if (b.h > h / 2) b.up = false;
+  });
+
+  // procenty
+  for (let i = 0; i < 10; i++) {
+    let x = Math.random() * w;
+    let y = Math.random() * h;
+
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.font = "20px Arial";
+    ctx.fillText((Math.random() > 0.5 ? "+" : "-") + (Math.random()*10).toFixed(2) + "%", x, y);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
