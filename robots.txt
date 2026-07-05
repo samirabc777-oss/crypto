@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://samirabc777-oss.github.io/crypto/sitemap.xml
